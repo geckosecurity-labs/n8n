@@ -419,6 +419,10 @@ export class ScimService {
 	async deleteUser(id: string): Promise<void> {
 		const user = await this.getUserEntity(id);
 
+		if (user.role?.slug === OWNER_ROLE_SLUG) {
+			throw new ScimInvalidValueError('The instance owner cannot be deprovisioned via SCIM');
+		}
+
 		user.disabled = true;
 		await this.userRepository.save(user);
 		this.eventService.emit('user-updated', { user, fieldsChanged: ['disabled'] });
