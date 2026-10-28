@@ -417,8 +417,12 @@ export class ScimService {
 	 * ownership can be transferred by an admin afterwards.
 	 */
 	async deleteUser(id: string): Promise<void> {
-		void id;
-		throw new ScimInvalidValueError('SCIM deprovisioning is not enabled on this instance');
+		const user = await this.getUserEntity(id);
+
+		user.disabled = true;
+		await this.userRepository.save(user);
+		this.eventService.emit('user-updated', { user, fieldsChanged: ['disabled'] });
+		this.logger.info('SCIM: User deprovisioned', { userId: user.id });
 	}
 
 	private async getUserEntity(id: string): Promise<User> {
